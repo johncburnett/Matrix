@@ -27,7 +27,7 @@ SynthDef("CombShift",{ |amp = 0.95|
 			pitchRatio:LinLin.ar(ampMap, 0.0, 1.0, 1.0, 2.0)
 		),
 		2.0,
-		pitch,
+		pitchMap,
 		Rand(0.25, 2.0),
 		0.45
 	);
