@@ -59,11 +59,11 @@ SynthDef(\Delay,{
 	in = In.ar(30, 2);
 
 	delay1 = Array.fill( 12,{
-		CombC.ar(in[0], 0.8, rrand(0.005, 0.1), 2)
+		CombC.ar(in[0], 0.8, rrand(0.05, 0.3), 2)
 	}).sum / 12;
 
 	delay2 = Array.fill( 12,{
-		CombC.ar(in[1], 0.8, rrand(0.005, 0.1), 2)
+		CombC.ar(in[1], 0.8, rrand(0.05, 0.3), 2)
 	}).sum / 12;
 
 	mix = [delay1, delay2];
