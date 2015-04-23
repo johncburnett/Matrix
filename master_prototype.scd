@@ -17,7 +17,7 @@ w = Window("GUI", Rect(
 
 //****************************************************************************//
 //_Sliders
-//TODO: set labels, title
+//TODO: labels, title
 
 ~sliderGen = { |width = 800, height = 600, x = 0, y = 0, numSliders = 10|
 	var sliderSet = Array.newClear(numSliders);
@@ -111,7 +111,7 @@ SynthDef(\gen_Process, { |inAmp=0, b1Amp=0, b2Amp=0, b3Amp=0, b4Amp=0|
 
 
 //_Output Module
-SynthDef(\output, {
+SynthDef(\output, { |amp=0|
 	arg amp = 1.0;
 	var in0,in1,in2,in3,in4,
 	mix,mix2,mix3,mix4;
@@ -132,7 +132,7 @@ SynthDef(\output, {
 //_Instantiate synths w/ GUI components
 
 ~liveIn = Synth(\input);
-~sliders1 = ~sliderGen.value(400, 300, 0, 0, 5);
+~sliders1 = ~sliderGen.value(330, 300, 0, 0, 5);
 for (0, 4, { |i|
 	~sliders1[0][i].action = { |obj|
 		NodeControl(~liveIn, i).value_(obj.value);
@@ -141,7 +141,7 @@ for (0, 4, { |i|
 });
 
 ~process = Synth(\gen_Process);
-~sliders2 = ~sliderGen.value(400, 300, 0, 300, 5);
+~sliders2 = ~sliderGen.value(330, 300, 0, 300, 5);
 for (0, 4, { |i|
 	~sliders2[0][i].action = { |obj|
 		NodeControl(~process, i).value = obj.value;
@@ -150,11 +150,15 @@ for (0, 4, { |i|
 });
 
 ~out = Synth(\output);
+~sliders3 = ~sliderGen.value(100, 600, 300, 0, 1);
+~sliders3[0][0].action = { |obj|
+	NodeControl(~out, 0).value = obj.value;
+	~sliders3[1][0].value_((obj.value * 1000).round / 1000);
 
-
+};
 );
 
-)
+);
 
 
 
