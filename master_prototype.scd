@@ -17,7 +17,7 @@ w = Window("GUI", Rect(
 
 //****************************************************************************//
 //_Sliders
-//TODO: set coordinates, labels, title
+//TODO: set labels, title
 
 ~sliderGen = { |width = 800, height = 600, x = 0, y = 0, numSliders = 10|
 	var sliderSet = Array.newClear(numSliders);
