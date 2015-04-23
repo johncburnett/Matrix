@@ -9,7 +9,7 @@
 (
 SynthDef(\Butter,{ |freq = 30, amp = 0.95, dur = 1|
 	var env, tone;
-	env = Env.new([0, 0.8, 0], [dur/16, dur/16 * 15], \lin);
+	env = Env.new([0, 0.8, 0], [dur/32, dur/32 * 31], \lin);
 	env = EnvGen.ar(env, doneAction:2);
 	tone = SinOsc.ar( freq * (1,3..10) * 0.95, mul:(1/5) ).sum.dup;
 	tone = Clip.ar(tone, 0, 0.8);
@@ -85,22 +85,7 @@ SynthDef(\Delay,{
 //_Routines
 (
 Synth(\ButteryGoodness, [\dur, 5]);
-
-/*~r1 = Routine({
-	5.do{ |i|
-		var dur = (i + 1)/2;
-		Synth(\Butter, [\freq, 20 * (10000.rand/1000), \dur, 30]);
-		// (dur * 1.1).wait;
-	};
-	// Synth(\ButteryGoodness, [\dur, 10]);
-	~comb.set(\lagTime, 10, \frequency, 30);
-});
-);
-
-~r1.play;
-~r1.reset;*/
-
-// Synth(\Snare);
+Synth(\Snare);
 
 
 )
