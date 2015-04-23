@@ -112,7 +112,6 @@ SynthDef(\gen_Process, { |inAmp=0, b1Amp=0, b2Amp=0, b3Amp=0, b4Amp=0|
 
 //_Output Module
 SynthDef(\output, { |amp=0|
-	arg amp = 1.0;
 	var in0,in1,in2,in3,in4,
 	mix,mix2,mix3,mix4;
 	//
