@@ -58,6 +58,28 @@ w = Window("GUI", Rect(
 ~sliders2 = ~sliderGen.value(400, 300, 400, 0, 5);
 ~sliders3 = ~sliderGen.value(400, 300, 0, 300, 5);
 ~sliders4 = ~sliderGen.value(400, 300, 400, 300, 5);*/
+
+//****************************************************************************//
+//_Matrix
+
+~matrixGen = { |n=6, m=6, x=0, y=0|
+	var buttonSet = Array.fill(n, { Array.newClear(m)});
+
+	for(0, n-1, { |i|
+		for(0, m-1, { |j|
+			buttonSet = Button(w, Rect(
+				40*j,
+				40*i,
+				30,
+				30
+			))
+			.states_([["", Color(1,1,0.51),Color.grey],["", Color.grey,Color(1,1,0.51)]]);
+		});
+	});
+	buttonSet;
+};
+
+~matrixGen.value;
 );
 
 
