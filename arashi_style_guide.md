@@ -1,25 +1,28 @@
-Style:
+Style [view in "RAW" or edit mode for correct formatting]:
 
-Input modules:
-  Output 4 channels
+Generator modules (6x):
+  Output 1 Stereo Buss (choose routing to FX via Matrix [a la Putney]
   
-Processing modules:
-  Output 4 stereo pairs
+Processing modules (x6):
+  Input 1 Stereo Buss -> Output 1 Stereo Buss
+  
+Output Module:
+  Input 6 Stereo Busses (from Processing Modules) [individual vol Control] -> Output 1 Stereo Buss [master vol Control]
 
 Buss Info: 
   Generators:
     no1 genInput
-      output (stereo) -> 50
+      output (stereo) -> choose route to [50,52,54,56,58,60] via matrix
     no2 droplet (wip)
-          output (stereo) -> 52
+          output (stereo) -> choose route to [50,52,54,56,58,60] via matrix
     no3 butterSynth
-          output (stereo) -> 54
+          output (stereo) -> choose route to [50,52,54,56,58,60] via matrix
     no4 patternPercussion
-          output (stereo) -> 56
+          output (stereo) -> choose route to [50,52,54,56,58,60] via matrix
     no5 Snare
-          output (stereo) -> 58
+          output (stereo) -> choose route to [50,52,54,56,58,60] via matrix
     no6 TBA
-          output (stereo) -> 60
+          output (stereo) -> choose route to [50,52,54,56,58,60] via matrix
           
   Processors:
     no1 dopplerPanner
