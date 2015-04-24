@@ -1,4 +1,4 @@
-Style:
+Style [view in "RAW" or edit mode for correct formatting]:
 
 Generator modules (6x):
   Output 1 Stereo Buss (choose routing to FX via Matrix [a la Putney]
