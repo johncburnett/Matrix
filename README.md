@@ -8,3 +8,8 @@ TODO:
     -Collect Modules
 
     -Implment patterns
+
+TODO [PaulusPersonal]:
+    -Create Droplet and LiveSampling synthDefs
+    -assemble Generators document
+    
