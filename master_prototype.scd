@@ -62,16 +62,18 @@ w = Window("GUI", Rect(
 //****************************************************************************//
 //_Matrix
 
-~matrixGen = { |n=6, m=6, x=0, y=0|
+~matrixGen = { |n=6, m=6, x=0, y=0, width=400, height=400|
 	var buttonSet = Array.fill(n, { Array.newClear(m)});
 
 	for(0, n-1, { |i|
 		for(0, m-1, { |j|
+			var div = (width - 40) / n;
+
 			buttonSet = Button(w, Rect(
-				40*j,
-				40*i,
-				30,
-				30
+				(div * i) + 20 + x,
+				(div * j) + 20 + y,
+				div-10,
+				div-10
 			))
 			.states_([["", Color(1,1,0.51),Color.grey],["", Color.grey,Color(1,1,0.51)]]);
 		});
