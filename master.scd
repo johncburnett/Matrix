@@ -300,7 +300,7 @@ w.drawFunc_{
 		Pen.stroke;
 	});
 
-	for(1, 3,{ |i|2
+	for(1, 3,{ |i|
 		Pen.line( 0@(i*~height/4), (2*~width/3)@(i*~height/4) );
 		Pen.stroke;
 	});
@@ -322,6 +322,7 @@ for(0, 3,{ |i|
 	});
 });
 
+//generate matrix
 ~matrix = ~matrixGen.value(6, 6, 2*~width/3, 0, ~width/3, 0);
 
 
