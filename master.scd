@@ -250,11 +250,6 @@ w = Window("GUI", Rect(
 	[sliderSet, valueSet];
 };
 
-/*~sliders1 = ~sliderGen.value(400, 300, 0, 0, 5);
-~sliders2 = ~sliderGen.value(400, 300, 400, 0, 5);
-~sliders3 = ~sliderGen.value(400, 300, 0, 300, 5);
-~sliders4 = ~sliderGen.value(400, 300, 400, 300, 5);*/
-
 
 //****************************************************************************//
 //_Matrix Generator
@@ -280,8 +275,6 @@ w = Window("GUI", Rect(
 	});
 	buttonSet;
 };
-
-// ~matrixGen.value(6, 6, 540, 0, 400, 400);
 
 
 //****************************************************************************//
@@ -323,7 +316,7 @@ for(0, 3,{ |i|
 });
 
 //generate matrix
-~matrix = ~matrixGen.value(6, 6, 2*~width/3, 0, ~width/3, 0);
+~matrix = ~matrixGen.value(6, 6, 2*~width/3 + 5, 0, ~width/3, 0);
 
 
 
