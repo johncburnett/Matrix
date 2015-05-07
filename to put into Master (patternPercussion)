@@ -1,1 +1,33 @@
+Add the following line of code after "s.boot":
 
+MIDIIn.connectAll;
+
+//also\\
+
+~soundBuf = Buffer.read(s,"*_*");
+
+//where *_* is some sample you drag in before you run the code !!!\\
+
+//also
+
+~bpm = 20; //<--Set this to taste!-->
+//~key=50.midicps;
+~beat=60/~bpm;
+//a-d are volum
+~vol1=0.0;
+~vol2=0.0;
+~vol3=0.0;
+~vol4=0.0;
+~bassFreq=1;
+~snareFreq=1;
+~hatFreq=1;
+~pitchLen=1;
+//sequence of patterns to draw from
+~duo = Pseq([~beat/2,~beat/2],1);
+~trio = Pseq([~beat/3,~beat/3,~beat/3],1);
+~quartet = Pseq([~beat/4,~beat/4,~beat/4,~beat/4,],1);
+~quarToQuin = Pseq([~beat/4,~beat/4,~beat/4,~beat/8,~beat/8],1);
+~quintet =  Pseq([~beat/5,~beat/5,~beat/5,~beat/5,~beat/5],1);
+~quinToTrio =  Pseq([~beat/5,~beat/5,~beat/5,~beat/15,~beat/3],1);
+
+---------------------------------------
