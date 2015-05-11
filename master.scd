@@ -26,11 +26,10 @@ s.boot;
 *
 * simple audio input
 */
-SynthDef(\audioInput, { |input, choose=50|
-	var outputList;
-	input = AudioIn.ar(1).dup;//supposed to be vocals
+SynthDef(\audioInput, { |amp = 0.95, choose=30|
+	var input = AudioIn.ar(1).dup;
 	//---
-	Out.ar(choose,input);//original signal
+	Out.ar(choose, input * amp);
 }).load(s);
 
 //---------------------
@@ -40,14 +39,12 @@ SynthDef(\audioInput, { |input, choose=50|
 *
 * pitch envelope-based synth
 */
-SynthDef(\droplet, {
-	//work in progress\\
-	arg freq=3000, dur=0.5, intensity, choose=50;
+SynthDef(\droplet, { |amp = 0.95, choose=30, gate=0, freq=3000, dur=0.5|
 	var sound,volEnv,pitchEnv;
-	pitchEnv=EnvGen.ar(Env.new([0.9,0.7,1,1],[0.06,0.05,0.89]*dur,\exponential),doneAction:2);
-	volEnv=EnvGen.ar(Env.new([0,1,0.8,0.0],[0.2,0.05,0.75]*dur));
+	pitchEnv=EnvGen.ar(Env.new([0.9,0.7,1,1],[0.06,0.05,0.89]*dur,\exponential), gate);
+	volEnv=EnvGen.ar(Env.new([0,1,0.8,0.0],[0.2,0.05,0.75]*dur), gate);
 	sound=SinOsc.ar(freq*pitchEnv,mul:volEnv);
-	Out.ar(choose,sound);
+	Out.ar(choose, sound * amp);
 }).load(s);
 
 //---------------------
@@ -57,14 +54,14 @@ SynthDef(\droplet, {
 *
 * ~Sawtooth Synth
 */
-SynthDef(\butter,{ |freq = 30, amp = 0.95, dur = 1, choose=50|
+SynthDef(\butter,{ |amp = 0.95, choose = 30, gate = 0, freq = 300, dur = 1|
 	var env, tone;
 	env = Env.new([0, 0.8, 0], [dur/16, dur/16 * 15], \lin);
-	env = EnvGen.ar(env, doneAction:2);
+	env = EnvGen.ar(env, gate);
 	tone = SinOsc.ar( freq * (1,3..10) * 0.95, mul:(1/5) ).sum.dup;
 	tone = Clip.ar(tone, 0, 0.8);
 	tone = HPF.ar(tone, freq*3);
-	Out.ar(choose, env * tone);
+	Out.ar(choose, amp * env * tone);
 }).load(s);
 
 
@@ -101,7 +98,7 @@ SynthDef(\dopPan, {
 	//---
 	mix = Pan2.ar(freqShift,pan*direction);
 	//mix2 = 0.7*DelayC.ar(Pan2.ar(shift,1-pan));//inverted and delayed panning to fill out the stereo field
-	Out.ar(100, (mix)*audioEnv*amp) //~~RemembeR! audio buss #14 doesn't work! Skip it~~
+	Out.ar(80, (mix)*audioEnv*amp) //~~RemembeR! audio buss #14 doesn't work! Skip it~~
 	}
 ).add;
 
@@ -112,7 +109,7 @@ SynthDef(\dopPan, {
 *
 * break the sound; splat the sound
 */
-SynthDef(\splatDelay,{ |amp = 0.0|
+SynthDef(\splatDelay,{ |amp = 0.5|
 	var in, delay1, delay2, mix;
 	in = In.ar(52, 2);
 
@@ -125,7 +122,7 @@ SynthDef(\splatDelay,{ |amp = 0.0|
 	}).sum / 12;
 
 	mix = [delay1, delay2];
-	Out.ar(102, mix * amp);
+	Out.ar(82, mix * amp);
 }).load(s);
 
 //---------------------
@@ -149,7 +146,7 @@ SynthDef(\octoVerb,{ |amp = 0.0|
 	reverb = Mix.ar(Array.fill(7,{ CombL.ar(predelay, 0.05, rrand(0.03, 0.05), 15) }));
 	6.do({ reverb = AllpassN.ar(reverb, 0.050, rrand(0.03, 0.05), 1) });
 
-	Out.ar(104, reverb * amp);
+	Out.ar(84, reverb * amp);
 }).load(s);
 
 
@@ -159,17 +156,18 @@ SynthDef(\octoVerb,{ |amp = 0.0|
 SynthDef(\output, { |amp = 0.95|
 	var in0,in1,in2,in3,in4,in5,mix;
 	//
-	in0 = In.ar(100, 2); //all inputs are stereo
-	in1 = In.ar(102, 2);
-	in2 = In.ar(104, 2);
-	in3 = In.ar(106, 2);
-	in4 = In.ar(108, 2);
-	in5 = In.ar(110, 2);
+	in0 = In.ar(80, 2); //all inputs are stereo
+	in1 = In.ar(82, 2);
+	in2 = In.ar(84, 2);
+	in3 = In.ar(86, 2);
+	in4 = In.ar(88, 2);
+	in5 = In.ar(90, 2);
 	//
 
 	mix = Mix.ar(2, [in0, in1, in2, in3, in4, in5]);
 	Out.ar(0, mix);
-}).add;
+	Out.ar(0, in1);
+}).load(s);
 
 
 //****************************************************************************//
@@ -211,6 +209,8 @@ w = Window("GUI", Rect(
 .front
 .alwaysOnTop_(true);
 
+// s.meter;
+
 
 //****************************************************************************//
 //_Slider Generator
@@ -240,7 +240,7 @@ w = Window("GUI", Rect(
 		))
 		.value_(0);
 
-		sliderSet[i].action= { |obj|
+		sliderSet[i].action = { |obj|
 			val.value_((sliderSet[i].value * 1000).round / 1000)
 		};
 
@@ -254,14 +254,14 @@ w = Window("GUI", Rect(
 //****************************************************************************//
 //_Matrix Generator
 
-~matrixGen = { |n=6, m=6, x=0, y=0, width=400, height=400|
+~matrixGen = { |n=6, m=6, x=0, y=0, width=400|
 	var buttonSet = Array.fill(n, { Array.newClear(m)});
 
 	for(0, n-1, { |i|
 		for(0, m-1, { |j|
 			var div = (width - 40) / n;
 
-			buttonSet = Button(w, Rect(
+			buttonSet[i][j] = Button(w, Rect(
 				(div * i) + 20 + x,
 				(div * j) + 20 + y,
 				div-10,
@@ -315,10 +315,27 @@ for(0, 3,{ |i|
 	});
 });
 
-//generate matrix
-~matrix = ~matrixGen.value(6, 6, 2*~width/3 + 5, 0, ~width/3, 0);
+//generate matrices
+~matrix = ~matrixGen.value(6, 6, 2*~width/3 + 30, 0, ~height/2);
 
+// ~matrix = ~matrixGen.value(6, 6, 2*~width/3 + 30, ~height/2, ~height/2);
 
+~generators = [~audioInput, ~droplet, ~butter];
+
+/**
+* Link matrix routing
+*
+* Second parameter of generators must be bus number
+*/
+for(0, 2,{ |i|
+	for(0, 2,{ |j|
+		~matrix[i][j].action = { |obj|
+			// NodeControl(~generators[i], 1).value = 50 + j * 2;
+			~generators[i].set(\choose, 50 + (j * 2));
+			(50 + (j*2)).postln;
+		};
+	});
+});
 
 );
 
