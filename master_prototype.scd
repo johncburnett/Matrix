@@ -2,8 +2,8 @@
 //****************************************************************************//
 //_Window
 
-~width = 800;
-~height = 600;
+~width = 1080;
+~height = 720;
 
 w = Window("GUI", Rect(
 	Window.screenBounds.width/2 - (~width/2),
@@ -75,14 +75,22 @@ w = Window("GUI", Rect(
 				div-10,
 				div-10
 			))
-			.states_([["", Color(1,1,0.51),Color.grey],["", Color.grey,Color(1,1,0.51)]]);
+			.states_([
+				["", Color(1,1,0.51),Color.grey],
+				["", Color.grey,Color(1,1,0.51)]
+			]);
 		});
 	});
 	buttonSet;
 };
 
-~matrixGen.value;
+~matrixGen.value(6, 6, 540, 0, 400, 400);
 );
+
+
+
+
+
 
 
 

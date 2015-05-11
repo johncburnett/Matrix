@@ -1,11 +1,11 @@
-//Here are the SynthDef Processors 
+//Here are the SynthDef Processors
 
 //---------------------
 
 /*
 * No.1 - DopPanner
 *
-* lo-fi doppler panner 
+* lo-fi doppler panner
 */
 SynthDef(\DopPan, {
 	      //_*argument desecriptions*_\\
@@ -60,7 +60,7 @@ SynthDef(\SplatDelay,{
 //---------------------
 
 /*
-* No.3 - OctoReverb
+* No.3 - OctoVerb
 *
 * 8-channel multi-band reverb
 */
@@ -68,18 +68,18 @@ SynthDef("OctoReverb",{ |amp = 0.0|
 	var in, predelay, reverb;
 
 	var full, low, lowmid, highmid, high;
-	full = In.ar(50)!2;
-	low = In.ar(51)!2;
-	lowmid = In.ar(52)!2;
-	highmid = In.ar(53)!2;
-	high = In.ar(54)!2;
+	input   = In.ar(54, 2);
+	low     = BBandPass.ar(input,250,0.25);
+	lowmid  = BBandPass.ar(input,1000,0.25);
+	highmid = BBandPass.ar(input,4000,0.25);
+	high    = BBandPass.ar(input,8000,0.25);
 
-	in = [low, lowmid, highmid, high];
+	in = [low + highmid, lowmid + high];
 	predelay = DelayN.ar(in, 0.1, [0.044, 0.048, 0.052, 0.526]);
 	reverb = Mix.ar(Array.fill(7,{ CombL.ar(predelay, 0.05, rrand(0.03, 0.05), 15) }));
 	6.do({ reverb = AllpassN.ar(reverb, 0.050, rrand(0.03, 0.05), 1) });
 
-	Out.ar(100, reverb * amp);
+	Out.ar(104, reverb * amp);
 }).load(s);
 
 //---------------------
