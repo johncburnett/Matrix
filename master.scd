@@ -7,7 +7,7 @@ o.memSize = 8192 * 4;
 s.boot;
 MIDIIn.connectAll;
 
-~soundBuf = Buffer.read(s, "*_*");
+// ~soundBuf = Buffer.read(s, "*_*");
 
 //Pattern percussion INIT
 ~bpm = 20; //<--Set this to taste!-->
@@ -55,7 +55,7 @@ MIDIIn.connectAll;
 * simple audio input
 */
 SynthDef(\audioInput, { |amp = 0.0, choose = 30|
-	var input = AudioIn.ar(1).dup;
+	var input = SoundIn.ar(0).dup;
 	//---
 	Out.ar(choose, input * amp);
 }).load(s);
@@ -95,7 +95,34 @@ SynthDef(\butter,{ |amp = 0.0, choose = 30, gate = 0, freq = 300, dur = 1|
 //---------------------
 
 /**
-* No.4 - patPerc
+* No.4 - phaseMod
+*
+* Phase modulation
+*/
+SynthDef(\phaseMod,{ |amp = 0.0, choose = 30, freq = 30|
+	var fund, oscA, oscB, pm;
+	fund = 40.midicps;
+	oscA = PMOsc.ar(fund, fund / 2.05, 2pi * 0.1);
+	oscB = SinOsc.ar(fund / 2.01, oscA * 2pi * 0.5);
+	pm = SinOsc.ar(fund / 2.02, oscB * 2pi * 0.8);
+	Out.ar(choose, pm!2);
+}).load(s);
+
+//---------------------
+
+/**
+* No.5 - noise
+*
+* to be implemented
+*/
+SynthDef(\noise,{ |amp = 0.0, choose = 30|
+	Out.ar(choose, WhiteNoise.ar(0.8)!2 * amp);
+}).load(s);
+
+//---------------------
+
+/**
+* No.6 - patPerc
 *
 * Pattern percussion - bass, snare, hat, pitch
 *
@@ -104,7 +131,7 @@ SynthDef(\butter,{ |amp = 0.0, choose = 30, gate = 0, freq = 300, dur = 1|
 
 //--start--\\
 //_kickDrum
-SynthDef(\bass, { |amp=0.0, choose=30, freq=200,  peak=180, peakdb=0, length=0.8, pan=0 |
+SynthDef(\bass, { |amp=0.0, choose=30, freq=200,  peak=180, peakdb=0, length=0.8, pan=0|
 	var sound, filter, env,xenv, env2;
 	env = Line.ar(1,0,length);
 	xenv = XLine.ar(1,0.0001,length);
@@ -149,33 +176,6 @@ SynthDef(\pitch, {|amp=0.0, choose=30, freq = 8000, length = 0.04, pan = 0, soun
 	Out.ar(choose,amp*Pan2.ar(soundMixed,pan))
 }).load(s);
 //--end--\\
-
-//---------------------
-
-/**
-* No.5 - phaseMod
-*
-* Phase modulation
-*/
-SynthDef(\phaseMod,{ |amp = 0.0, choose = 30, freq = 30|
-	var fund, oscA, oscB, pm;
-	fund = 40.midicps;
-	oscA = PMOsc.ar(fund, fund / 2.05, 2pi * 0.1);
-	oscB = SinOsc.ar(fund / 2.01, oscA * 2pi * 0.5);
-	pm = SinOsc.ar(fund / 2.02, oscB * 2pi * 0.8);
-	Out.ar(choose, pm!2);
-}).load(s);
-
-//---------------------
-
-/**
-* No.6 - noise
-*
-* to be implemented
-*/
-Synth(\noise,{ |amp = 0.0, choose = 30|
-	Out.ar(choose, WhiteNoise.ar(0.8)!2 * amp);
-}).load(s)
 
 
 //****************************************************************************//
@@ -274,7 +274,7 @@ SynthDef(\octoVerb,{ |amp = 0.0|
 SynthDef("combShift",{ |amp = 0.95|
 	var ampMap, pitchMap, p1, p2, p3, p4;
 
-	var full, low, lowmid, highmid, high;
+	var input, low, lowmid, highmid, high;
 	input   = In.ar(56, 2);
 	low     = BBandPass.ar(input,250,0.25);
 	lowmid  = BBandPass.ar(input,1000,0.25);
@@ -282,9 +282,9 @@ SynthDef("combShift",{ |amp = 0.95|
 	high    = BBandPass.ar(input,8000,0.25);
 
 	//amplitude mapping to pitch ratio
-	ampMap = Amplitude.kr(full[0]);
+	ampMap = Amplitude.kr(input[0]);
 	//pitch mapping to delay time
-	pitchMap = Lag.kr(LinLin.kr(Pitch.kr(full[0]), 0, 3000, 0.1, 0.5), 0.05);
+	pitchMap = Lag.kr(LinLin.kr(Pitch.kr(input[0]), 0, 3000, 0.1, 0.5), 0.05);
 
 	p1 = CombC.ar(
 		PitchShift.ar(
@@ -361,27 +361,28 @@ SynthDef(\combFilter,{ |amp = 0.0, frequency = 30, resonance = 1, octaves = 10, 
 *
 * ->Input straight to output
 */
-SynthDef(\directOut,{
+SynthDef(\directOut, { |amp = 0.0|
 	var in = In.ar(60,2);
-	Out.ar(90, in);
+	Out.ar(90, in * amp);
 }).load(s);
 
 
 //****************************************************************************//
 //_Output Module
 
-SynthDef(\output, { |amp = 0.0|
+SynthDef(\output, { |amp = 0.9|
 	var in0,in1,in2,in3,in4,in5,mix;
 	//
-	in0 = In.ar(80, 2); //all inputs are stereo
-	in1 = In.ar(82, 2);
-	in2 = In.ar(84, 2);
-	in3 = In.ar(86, 2);
-	in4 = In.ar(88, 2);
-	in5 = In.ar(90, 2);
+	in0 = In.ar(50, 2); //all inputs are stereo
+	in1 = In.ar(52, 2);
+	in2 = In.ar(54, 2);
+	in3 = In.ar(56, 2);
+	in4 = In.ar(58, 2);
+	in5 = In.ar(60, 2);
 	//
 
-	mix = Mix.ar(2, [in0, in1, in2, in3, in4, in5]);
+	// mix = Mix.ar(2, [in0, in1, in2, in3, in4, in5] / 6);
+	mix = (in0 + in1 + in2 + in3 + in4 + in5) / 6;
 	Out.ar(0, mix);
 }).load(s);
 
@@ -398,21 +399,22 @@ SynthDef(\output, { |amp = 0.0|
 ~octoVerb   = Synth(\octoVerb);
 ~combShift  = Synth(\combShift);
 ~combFilter = Synth(\combFilter);
-~directOut  = Snyth(\directOut);
+~directOut  = Synth(\directOut);
 
 //generators
 ~audioInput = Synth(\audioInput);
 ~droplet    = Synth(\droplet);
 ~butter     = Synth(\butter);
-~bass       = Synth(\bass);
-~snare      = Synth(\snare);
-~hat        = Synth(\hat);
-~pitch      = Synth(\pitch);
-~patPerc    = [~bass, ~snare, ~hat, ~pitch];
 ~phaseMod   = Synth(\phaseMod);
 ~noise      = Synth(\noise);
 
-~generators = [~audioInput, ~droplet, ~butter, ~patPerc, ~phaseMod, ~noise];
+/*~bass       = Synth(\bass);
+~snare      = Synth(\snare);
+~hat        = Synth(\hat);
+~pitch      = Synth(\pitch);
+~patPerc    = [~bass, ~snare, ~hat, ~pitch];*/
+
+~generators = [~audioInput, ~droplet, ~butter, ~phaseMod, ~noise];
 ~processors = [~dopPan, ~splatDelay, ~octoVerb, ~combShift, ~combFilter, ~directOut];
 
 //****************************************************************************//
@@ -443,7 +445,7 @@ w = Window("GUI", Rect(
 .front
 .alwaysOnTop_(true);
 
-// s.meter;
+s.meter;
 
 
 //****************************************************************************//
@@ -533,6 +535,7 @@ w.drawFunc_{
 	});
 };
 
+
 //generate sliders
 ~sliderSet = Array.newClear(12);
 p = 0;
@@ -549,10 +552,10 @@ for(0, 3,{ |i|
 	});
 });
 
+
 //generate matrices
 ~matrix = ~matrixGen.value(6, 6, 2*~width/3 + 30, 0, ~height/2);
 
-// ~matrix = ~matrixGen.value(6, 6, 2*~width/3 + 30, ~height/2, ~height/2);
 
 /**
 * Link matrix routing
@@ -563,14 +566,34 @@ for(0, 5,{ |i|
 	for(0, 5,{ |j|
 		~matrix[i][j].action = { |obj|
 			// NodeControl(~generators[i], 1).value = 50 + j * 2;
-			~generators[i].set(\choose, 50 + (j * 2));
-			(50 + (j*2)).postln;
+			var port = (50 + (j*2));
+			~generators[i].set(\choose, port);
+			(~generators[i].defName + "->" + ~processors[j].defName + " (" + port + ")").postln;
 		};
 	});
 });
 
-);
 
+/**
+* Link Amplitudes
+*/
+for(0, ~generators.size-1,{ |i|
+	~sliderSet[i][0][0].action = { |obj|
+		var synth = ~generators[i];
+		NodeControl(synth, 0).value = obj.value;
+		~sliderSet[i][1][0].value_((obj.value * 1000).round / 1000);
+	};
+});
+
+for(0, ~processors.size-1,{ |i|
+	~sliderSet[i+6][0][0].action = { |obj|
+		var synth = ~generators[i];
+		NodeControl(synth, 0).value = obj.value;
+		~sliderSet[i + 6][1][0].value_((obj.value * 1000).round / 1000);
+	};
+});
+
+);
 
 
 )
