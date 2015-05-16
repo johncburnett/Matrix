@@ -9,7 +9,7 @@ MIDIIn.connectAll;
 
 // ~soundBuf = Buffer.read(s, "*_*");
 
-//Pattern percussion INIT
+//Pattern percussion stuff
 ~bpm = 20; //<--Set this to taste!-->
 //~key=50.midicps;
 ~beat = 60/~bpm;
@@ -129,7 +129,7 @@ SynthDef(\noise,{ |amp = 0.0, choose = 30|
 * TODO - make synths static, integrate with routines
 */
 
-//--start--\\
+/*//--start--\\
 //_kickDrum
 SynthDef(\bass, { |amp=0.0, choose=30, freq=200,  peak=180, peakdb=0, length=0.8, pan=0|
 	var sound, filter, env,xenv, env2;
@@ -175,7 +175,7 @@ SynthDef(\pitch, {|amp=0.0, choose=30, freq = 8000, length = 0.04, pan = 0, soun
 	Line.kr(dur:length, doneAction:2);
 	Out.ar(choose,amp*Pan2.ar(soundMixed,pan))
 }).load(s);
-//--end--\\
+//--end--\\*/
 
 
 //****************************************************************************//
@@ -564,11 +564,15 @@ for(0, 3,{ |i|
 */
 for(0, 5,{ |i|
 	for(0, 5,{ |j|
+		var port = (50 + (j*2));
 		~matrix[i][j].action = { |obj|
-			// NodeControl(~generators[i], 1).value = 50 + j * 2;
-			var port = (50 + (j*2));
-			~generators[i].set(\choose, port);
-			(~generators[i].defName + "->" + ~processors[j].defName + " (" + port + ")").postln;
+			if( ~matrix[i][j].value == 1,
+				{   port = (50 + (j*2));
+					~generators[i].set(\choose, port);
+					(~generators[i].defName + "--->" + ~processors[j].defName + " (" + port + ")").postln; },
+				{   ~generators[i].set(\choose, 30);
+					(~generators[i].defName + "-/->" + ~processors[j].defName + " (" + port + ")").postln; }
+			);
 		};
 	});
 });
