@@ -407,8 +407,11 @@ SynthDef(\output, { |amp = 0.9|
 ~butter     = Synth(\butter);*/
 ~phaseMod   = Synth(\phaseMod);
 ~noise      = Synth(\noise);
+~patternPerc= 0;//
+~null       = 0;
 
-/*~bass       = Synth(\bass);
+/*^^^PatternPercussion will implemented at some point, but we do not have the time at this moment.
+~bass       = Synth(\bass);
 ~snare      = Synth(\snare);
 ~hat        = Synth(\hat);
 ~pitch      = Synth(\pitch);
@@ -420,6 +423,25 @@ SynthDef(\output, { |amp = 0.9|
 //****************************************************************************//
 //_Routines + Patterns
 
+//make sure these are actually the names of the generators...
+~generatorList = [~audioInput,~droplet,~butter,~phaseMod,~noise,~phaseMod,~patternPerc,~null]
+
+//this variable can be changed live ***THIS IS WHAT THE MATRIX SHOULD CHANGE***
+~whichSynth = 6;//choose which synth you want to trig with the routine
+               //a value of 6 sends gate message to ~null synth, which does nothing.
+
+//routine
+~genRoutine = Routine{
+	inf.do{
+	~generatorList.at(~whichSynth).set(\gate, 1);
+	0.5.wait;
+	~generatorList.at(~whichSynth).set(\gate, 0);
+	0.5.wait;
+	}
+};
+
+//play routine
+~genRoutine.reset;~genRoutine.play;
 //TODO
 
 );
@@ -560,6 +582,11 @@ for(0, 3,{ |i|
 /**
 * Link matrix routing
 *
+
+HEY JOHN, ITS PAULUS. I HAVE PUT THE ROUTINE IN THE CODE UP ABOVE. THERE IS COMMENTING THERE BUT BASICALLY YOU HAVE TO SEND A MESSAGE TO "~whichSynth" with the number of the synth you want to send the rhythmic gate messages to... Droplet is 2, Butter is 3 and PatternPerc is 6 [BUT remember to correnct for zero-indexing!].
+
+ALSO I NOTICED: NOTHING IS ACTUALLY GOING TO THE EFFECTS YET, RIGHT? THE ENTIRE COLUMN GOES TO DIRECT OUT PUT I THINK...
+
 * Second parameter of generators must be bus number
 */
 ~asyncValues = { |synth|
