@@ -67,10 +67,10 @@ SynthDef(\audioInput, { |amp = 0.0, choose = 30|
 *
 * pitch envelope-based synth
 */
-SynthDef(\droplet, { |amp = 0.0, choose = 30, gate = 0, freq = 3000, dur = 0.5|
+SynthDef(\droplet, { |amp = 0.7, choose = 30, gate = 0, freq = 3000, dur = 0.5|
 	var sound,volEnv,pitchEnv;
 	pitchEnv=EnvGen.ar(Env.new([0.9,0.7,1,1],[0.06,0.05,0.89]*dur,\exponential), gate);
-	volEnv=EnvGen.ar(Env.new([0,1,0.8,0.0],[0.2,0.05,0.75]*dur), gate);
+	volEnv=EnvGen.ar(Env.new([0,1,0.8,0.0],[0.2,0.05,0.75]*dur), doneAction:2);
 	sound=SinOsc.ar(freq*pitchEnv,mul:volEnv);
 	Out.ar(choose, sound * amp);
 }).load(s);
@@ -82,10 +82,10 @@ SynthDef(\droplet, { |amp = 0.0, choose = 30, gate = 0, freq = 3000, dur = 0.5|
 *
 * ~Sawtooth Synth
 */
-SynthDef(\butter,{ |amp = 0.0, choose = 30, gate = 0, freq = 300, dur = 1|
+SynthDef(\butter,{ |amp = 0.7, choose = 30, gate = 0, freq = 300, dur = 1|
 	var env, tone;
 	env = Env.new([0, 0.8, 0], [dur/16, dur/16 * 15], \lin);
-	env = EnvGen.ar(env, gate);
+	env = EnvGen.ar(env, doneAction:2);
 	tone = SinOsc.ar( freq * (1,3..10) * 0.95, mul:(1/5) ).sum.dup;
 	tone = Clip.ar(tone, 0, 0.8);
 	tone = HPF.ar(tone, freq*3);
@@ -210,7 +210,7 @@ SynthDef(\dopPan, { |amp=0.0, gestureNum=0, gestureLen=1, depth=0.3, panShape=0.
 	//---
 	mix = Pan2.ar(freqShift,pan*direction);
 	//mix2 = 0.7*DelayC.ar(Pan2.ar(shift,1-pan));//inverted and delayed panning to fill out the stereo field
-	Out.ar(80, (mix)*audioEnv*amp) //~~RemembeR! audio buss #14 doesn't work! Skip it~~
+	Out.ar(80, (mix)*audioEnv*amp)
 	}
 ).load(s);
 
@@ -373,16 +373,16 @@ SynthDef(\directOut, { |amp = 0.0|
 SynthDef(\output, { |amp = 0.9|
 	var in0,in1,in2,in3,in4,in5,mix;
 	//
-	in0 = In.ar(50, 2); //all inputs are stereo
-	in1 = In.ar(52, 2);
-	in2 = In.ar(54, 2);
-	in3 = In.ar(56, 2);
-	in4 = In.ar(58, 2);
-	in5 = In.ar(60, 2);
+	in0 = In.ar(80, 2); //all inputs are stereo
+	in1 = In.ar(82, 2);
+	in2 = In.ar(84, 2);
+	in3 = In.ar(86, 2);
+	in4 = In.ar(88, 2);
+	in5 = In.ar(90, 2);
 	//
 
 	// mix = Mix.ar(2, [in0, in1, in2, in3, in4, in5] / 6);
-	mix = (in0 + in1 + in2 + in3 + in4 + in5) / 6;
+	mix = (in0 + in1 + in2 + in3 + in4 + in5) / 3;
 	Out.ar(0, mix);
 }).load(s);
 
@@ -403,8 +403,8 @@ SynthDef(\output, { |amp = 0.9|
 
 //generators
 ~audioInput = Synth(\audioInput);
-~droplet    = Synth(\droplet);
-~butter     = Synth(\butter);
+/*~droplet    = Synth(\droplet);
+~butter     = Synth(\butter);*/
 ~phaseMod   = Synth(\phaseMod);
 ~noise      = Synth(\noise);
 
@@ -562,20 +562,60 @@ for(0, 3,{ |i|
 *
 * Second parameter of generators must be bus number
 */
+~asyncValues = { |synth|
+	var x = (), d = SynthDescLib.global[synth.defName.asSymbol];
+	d.notNil.if { d.controls.do { |c|  synth.get(c.name,  { |y|
+		x.put(c.name, y) }) } };
+	x
+};
+
+~syncValues = { |synth|
+        var x = (), d = SynthDescLib.global[synth.defName.asSymbol];
+        d.notNil.if { d.controls.do { |c| x.put(c.name, c.defaultValue) } };
+        x
+};
+
 for(0, 5,{ |i|
 	for(0, 5,{ |j|
 		var port = (50 + (j*2));
+
 		~matrix[i][j].action = { |obj|
-			if( ~matrix[i][j].value == 1,
-				{   port = (50 + (j*2));
+
+			if( ~matrix[i][j].value == 1, {
+					port = (50 + (j*2));
 					~generators[i].set(\choose, port);
-					(~generators[i].defName + "--->" + ~processors[j].defName + " (" + port + ")").postln; },
-				{   ~generators[i].set(\choose, 30);
-					(~generators[i].defName + "-/->" + ~processors[j].defName + " (" + port + ")").postln; }
-			);
+					(~generators[i].defName + "--->" + ~processors[j].defName + " (" + port + ")").postln;
+			});
+
+			if( ~matrix[i][j] != 1, {
+					~generators[i].set(\choose, 30);
+					(~generators[i].defName + "-/->" + ~processors[j].defName + " (" + port + ")").postln;
+			});
 		};
 	});
 });
+
+~makeOneShot = { |column|
+	for(0, 5, { |i|
+		var button = ~matrix[column][i];
+
+		button.states_([
+			["", Color(1,1,0.51),Color.grey]
+		]);
+
+		button.action = {
+			var port, generator, processor;
+			port = (50 + (i*2));
+			processor = ~processors[i];
+			if( column == 1, { generator = \droplet }, { generator = \butter } );
+			(generator + "--->" + processor.defName + " (" + port + ")").postln;
+			Synth(generator, [\choose, port]);
+		};
+	});
+};
+
+~makeOneShot.(1);
+~makeOneShot.(2);
 
 
 /**
@@ -590,7 +630,7 @@ for(0, ~generators.size-1,{ |i|
 });
 
 for(0, ~processors.size-1,{ |i|
-	~sliderSet[i+6][0][0].action = { |obj|
+	~sliderSet[i + 6][0][0].action = { |obj|
 		var synth = ~generators[i];
 		NodeControl(synth, 0).value = obj.value;
 		~sliderSet[i + 6][1][0].value_((obj.value * 1000).round / 1000);
