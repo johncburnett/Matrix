@@ -424,7 +424,7 @@ SynthDef(\output, { |amp = 0.9|
 //_Routines + Patterns
 
 //make sure these are actually the names of the generators...
-~generatorList = [~audioInput,~droplet,~butter,~phaseMod,~noise,~phaseMod,~patternPerc,~null]
+~generatorList = [~audioInput,~droplet,~butter,~phaseMod,~noise,~phaseMod,~patternPerc,~null];
 
 //this variable can be changed live ***THIS IS WHAT THE MATRIX SHOULD CHANGE***
 ~whichSynth = 6;//choose which synth you want to trig with the routine
