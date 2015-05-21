@@ -17,44 +17,44 @@ Buss Info:
           output (stereo) -> choose route to [50,52,54,56,58,60] via matrix
     no3 butterSynth
           output (stereo) -> choose route to [50,52,54,56,58,60] via matrix
-    no4 patternPercussion
+    no4 phaseMod
           output (stereo) -> choose route to [50,52,54,56,58,60] via matrix
-    no5 Snare
+    no5 noise
           output (stereo) -> choose route to [50,52,54,56,58,60] via matrix
-    no6 TBA
+    no6 PatternPercussion (NOT WORKING YET)
           output (stereo) -> choose route to [50,52,54,56,58,60] via matrix
           
   Processors:
     no1 dopplerPanner
       input (stereo) -> 50
-      output (stereo) -> 100
+      output (stereo) -> 80
     no2 SplatDelay
       input (stereo) -> 52
-      output (stereo) -> 102
+      output (stereo) -> 82
     no3 OctoVerb
       input (stereo) -> 54
-      output (stereo) -> 104
+      output (stereo) -> 84
     no4 CombShift
       input (stereo) -> 56
-      output (stereo) -> 106
+      output (stereo) -> 86
     no5 CombFilter
       input (stereo) -> 58
-      output (stereo) -> 108
-    no6 LiveSampler (wip)
+      output (stereo) -> 88
+    no6 DirectOut
       input (stereo) -> 60
-      output (stereo) -> 110
+      output (stereo) -> 90
       
   Output Module:
     Input from dopplerPanner
-      output (stereo) -> 100
+      output (stereo) -> 80
     Input from SplatDelay
-          output (stereo) -> 102
+          output (stereo) -> 82
     Input from OctoVerb
-          output (stereo) -> 104
+          output (stereo) -> 84
     Input from CombShift
-          output (stereo) -> 106
+          output (stereo) -> 86
     Input from CombFilter
-          output (stereo) -> 108
-    Input from LiveSampler
-          output (stereo) -> 110
+          output (stereo) -> 88
+    Input from DirectOut
+          output (stereo) -> 90
         
