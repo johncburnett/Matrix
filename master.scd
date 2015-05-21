@@ -129,53 +129,6 @@ SynthDef(\noise,{ |amp = 0.0, choose = 30|
 * TODO - make synths static, integrate with routines
 */
 
-/*//--start--\\
-//_kickDrum
-SynthDef(\bass, { |amp=0.0, choose=30, freq=200,  peak=180, peakdb=0, length=0.8, pan=0|
-	var sound, filter, env,xenv, env2;
-	env = Line.ar(1,0,length);
-	xenv = XLine.ar(1,0.0001,length);
-	env2 = XLine.ar(1,0.0001,length*3, doneAction: 2);
-	sound = SinOsc.ar(freq*xenv, mul: env);
-	filter =  BPeakEQ.ar(sound,peak, db:peakdb)+SinOsc.ar(freq/2*((env2/2.5)+0.5), mul:env2);
-	Out.ar(choose,amp*Pan2.ar(filter,pan))
-}).load(s);
-
-//_snare
-SynthDef(\snare, { |amp=0.0, choose=30, distortion = 0.9, filtFreq = 1000,peak = 8000, length = 0.3, pan=0 |
-	var sound, filter, dist;
-	//sound = PinkNoise.ar();
-	sound = WhiteNoise.ar();
-	filter = BBandPass.ar(sound,filtFreq);
-	peak = BPeakEQ.ar(filter, peak,db:9);
-	dist =
-	  XLine.ar(1,0.0001,length, doneAction:2) * (Limiter.ar(peak,1-distortion,dur:0.0001)*(1/(1-distortion)));
-	Out.ar(choose,amp*(Pan2.ar(dist,pan)))
-}).load(s);
-
-//_hiHat
-SynthDef(\hat, { |amp=0.0, choose=30, distortion = 0.9, filtFreq = 8000, peak = 16000, length = 0.05 |
-	var sound, filter, dist;
-	sound = WhiteNoise.ar();
-	filter = BBandPass.ar(sound,filtFreq);
-	peak = BPeakEQ.ar(filter, peak,db:12) + SinOsc.ar(peak+Rand(-800,200),mul:0.22);
-	dist =
-	  XLine.ar(1,0.0001,length, doneAction:2) * (Limiter.ar(peak,1-distortion,dur:0.0001)*(1/(1-distortion)));
-	Out.ar(choose,amp*Pan2.ar(dist))
-}).load(s);
-
-//_pitchBasedSynth
-SynthDef(\pitch, {|amp=0.0, choose=30, freq = 8000, length = 0.04, pan = 0, soundmix=(-1)|
-	var sound,soundAlt,soundMixed, verb, env;
-	freq = freq+Rand(-40,60);
-	env = EnvGen.kr(Env.new([1,1,0],[length,0]));
-	sound = SinOsc.ar(XLine.kr(freq-20,freq,length/4.0),mul:env;);
-	soundAlt=PlayBuf.ar(1,~soundBuf,freq/1000.0,1);
-	soundMixed = XFade2.ar(sound,soundAlt,soundmix);
-	Line.kr(dur:length, doneAction:2);
-	Out.ar(choose,amp*Pan2.ar(soundMixed,pan))
-}).load(s);
-//--end--\\*/
 
 
 //****************************************************************************//
@@ -187,24 +140,25 @@ SynthDef(\pitch, {|amp=0.0, choose=30, freq = 8000, length = 0.04, pan = 0, soun
 * lo-fi doppler panner
 */
 SynthDef(\dopPan, { |amp=0.0, gestureNum=0, gestureLen=1, depth=0.3, panShape=0.1, direction=1, tail=3|
-	      //_*argument desecriptions*_\\
-	     //============================\\
+	//_*argument desecriptions*_\\
+	//============================\\
 	//_gestureNum_ indicates the shape of the pan
 	//_gestureLen_ determines length of the pan gesture
 	//_depth_ represents the max freq change from the doppler effec
 	/*_panShape_ determines balance between "approach" panning (pitchshift up) and "depart" panning (pitchshift down);
-	  _panShape_ range: 0.0 < range > 1.0; closer to 0 is a quicker approach, and vice versa
+	_panShape_ range: 0.0 < range > 1.0; closer to 0 is a quicker approach, and vice versa
 	*/
 	//if _direction_ == 1, pan is L -> R; if direction == -1, pan is R -> L
 	//tail determines the length of the fade out/assoc. pitchshift downwards...
-	var sound,freqShift,audioEnv,dopEnv,pan,panDelta, mix,mix2,bands;
+	var sound,trig,freqShift,audioEnv,dopEnv,pan,panDelta, mix,mix2,bands;
 	//---
 	sound = In.ar(50, 2).sum;//choose input freq range (0-4)
+	trig=Pulse.kr(Array.fill(10,{1.0.rand}),0.4).sum;
 	//---
-	pan=EnvGen.kr(Env.new([1.0,0.0,-1.0],[gestureLen*panShape,gestureLen*(1-panShape)],curve:\sine));
-	panDelta=EnvGen.kr(Env.new([1,1.0+depth,1-(depth*1.5)],[gestureLen*panShape,gestureLen*(1-panShape)],[3,1]));
+	pan=EnvGen.kr(Env.new([1.0,0.0,-1.0],[gestureLen*panShape,gestureLen*(1-panShape)],curve:\sine),trig);
+	panDelta=EnvGen.kr(Env.new([1,1.0+depth,1-(depth*1.5)],[gestureLen*panShape,gestureLen*(1-panShape)],[3,1]),trig);
 	//pitch shifted up as it nears the center, and down as it passes the center
-	audioEnv=EnvGen.kr(Env.new([0.0,1,0.0],[gestureLen*panShape,gestureLen*(1-panShape)],[-3,-6]),doneAction:2);
+	audioEnv=EnvGen.kr(Env.new([0.0,1,0.0],[gestureLen*panShape,gestureLen*(1-panShape)],[-3,-6]),trig);
 	freqShift=PitchShift.ar(sound,windowSize: 0.1,pitchRatio:panDelta);
 	//the faster the pan, the larger the freq difference (can be neg.)
 	//---
@@ -391,22 +345,23 @@ SynthDef(\output, { |amp = 0.9|
 //_Instantiate synths
 
 //output
-~output     = Synth(\output);
+~output=Synth.tail(1,\output);
+
 
 //processors
-~dopPan     = Synth(\dopPan);
-~splatDelay = Synth(\splatDelay);
-~octoVerb   = Synth(\octoVerb);
-~combShift  = Synth(\combShift);
-~combFilter = Synth(\combFilter);
-~directOut  = Synth(\directOut);
+~directOut  = Synth.before(~output,\directOut);
+~dopPan     = Synth.before(~output,\dopPan);
+~octoVerb   = Synth.before(~output,\octoVerb);
+~splatDelay = Synth.before(~output,\splatDelay);
+~combShift  = Synth.before(~output,\combShift);
+~combFilter = Synth.before(~output,\combFilter);
 
 //generators
-~audioInput = Synth(\audioInput);
-/*~droplet    = Synth(\droplet);
-~butter     = Synth(\butter);*/
-~phaseMod   = Synth(\phaseMod);
-~noise      = Synth(\noise);
+~audioInput = Synth.before(~directOut,\audioInput);
+~droplet    = Synth.before(~directOut,\droplet);
+~butter     = Synth.before(~directOut,\butter);
+~phaseMod   = Synth.before(~directOut,\phaseMod);
+~noise      = Synth.before(~directOut,\noise);
 ~patternPerc= 0;//
 ~null       = 0;
 
@@ -417,36 +372,18 @@ SynthDef(\output, { |amp = 0.9|
 ~pitch      = Synth(\pitch);
 ~patPerc    = [~bass, ~snare, ~hat, ~pitch];*/
 
-~generators = [~audioInput, ~droplet, ~butter, ~phaseMod, ~noise];
+~generators = [~audioInput, ~droplet, ~butter, ~phaseMod, ~noise,~null];
 ~processors = [~dopPan, ~splatDelay, ~octoVerb, ~combShift, ~combFilter, ~directOut];
 
 //****************************************************************************//
-//_Routines + Patterns
-
-//make sure these are actually the names of the generators...
-~generatorList = [~audioInput,~droplet,~butter,~phaseMod,~noise,~phaseMod,~patternPerc,~null];
-
-//this variable can be changed live ***THIS IS WHAT THE MATRIX SHOULD CHANGE***
-~whichSynth = 6;//choose which synth you want to trig with the routine
-               //a value of 6 sends gate message to ~null synth, which does nothing.
-
-//routine
-~genRoutine = Routine{
-	inf.do{
-	~generatorList.at(~whichSynth).set(\gate, 1);
-	0.5.wait;
-	~generatorList.at(~whichSynth).set(\gate, 0);
-	0.5.wait;
-	}
-};
-
-//play routine
-~genRoutine.reset;~genRoutine.play;
-//TODO
 
 );
 
-
+// ~phaseMod.set(\choose, 52)
+//
+// ~phaseMod.set(\amp, 1)
+// ~s.set(\amp, 1);
+// ~directOut.set(\amp, 1);
 
 
 
@@ -578,7 +515,6 @@ for(0, 3,{ |i|
 //generate matrices
 ~matrix = ~matrixGen.value(6, 6, 2*~width/3 + 30, 0, ~height/2);
 
-
 /**
 * Link matrix routing
 *
@@ -597,9 +533,9 @@ ALSO I NOTICED: NOTHING IS ACTUALLY GOING TO THE EFFECTS YET, RIGHT? THE ENTIRE 
 };
 
 ~syncValues = { |synth|
-        var x = (), d = SynthDescLib.global[synth.defName.asSymbol];
-        d.notNil.if { d.controls.do { |c| x.put(c.name, c.defaultValue) } };
-        x
+	var x = (), d = SynthDescLib.global[synth.defName.asSymbol];
+	d.notNil.if { d.controls.do { |c| x.put(c.name, c.defaultValue) } };
+	x
 };
 
 for(0, 5,{ |i|
@@ -609,14 +545,16 @@ for(0, 5,{ |i|
 		~matrix[i][j].action = { |obj|
 
 			if( ~matrix[i][j].value == 1, {
-					port = (50 + (j*2));
-					~generators[i].set(\choose, port);
-					(~generators[i].defName + "--->" + ~processors[j].defName + " (" + port + ")").postln;
-			});
-
-			if( ~matrix[i][j] != 1, {
+				port = (50 + (j*2));
+				~generators[i].set(\choose, port);
+				(~generators[i].defName + "--->" + ~processors[j].defName + " (" + port + ")").postln;
+				},{
 					~generators[i].set(\choose, 30);
 					(~generators[i].defName + "-/->" + ~processors[j].defName + " (" + port + ")").postln;
+			});
+
+			for(0, 5, { |k|
+				if( k != j, { ~matrix[i][k].value = 0; } );
 			});
 		};
 	});
@@ -658,7 +596,8 @@ for(0, ~generators.size-1,{ |i|
 
 for(0, ~processors.size-1,{ |i|
 	~sliderSet[i + 6][0][0].action = { |obj|
-		var synth = ~generators[i];
+		var synth = ~processors[i];
+		synth.defName.postln;
 		NodeControl(synth, 0).value = obj.value;
 		~sliderSet[i + 6][1][0].value_((obj.value * 1000).round / 1000);
 	};
