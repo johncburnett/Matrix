@@ -43,12 +43,10 @@ MIDIIn.connectAll;
 
 (
 
-
-
-(
+//
 //****************************************************************************//
 //_Generators
-
+(
 /**
 * No.1 - AudioInput
 *
@@ -67,12 +65,12 @@ SynthDef(\audioInput, { |amp = 0.0, choose = 30|
 *
 * pitch envelope-based synth
 */
-SynthDef(\droplet, { |amp = 0.7, choose = 30, gate = 0, freq = 3000, dur = 0.5|
+SynthDef(\droplet, { |amp = 0.7, choose = 30, gate = 0, freq = 3000, dur = 1|
 	var sound,volEnv,pitchEnv;
 	pitchEnv=EnvGen.ar(Env.new([0.9,0.7,1,1],[0.06,0.05,0.89]*dur,\exponential), gate);
 	volEnv=EnvGen.ar(Env.new([0,1,0.8,0.0],[0.2,0.05,0.75]*dur), doneAction:2);
 	sound=SinOsc.ar(freq*pitchEnv,mul:volEnv);
-	Out.ar(choose, sound * amp);
+	Out.ar(choose, Pan2.ar(sound) * amp);
 }).load(s);
 
 //---------------------
