@@ -1,3 +1,4 @@
+Server.killAll
 (
 //****************************************************************************//
 //_INIT - do this first or you will be sad
@@ -137,12 +138,11 @@ SynthDef(\noise,{ |amp = 0.0, choose = 30|
 *
 * lo-fi doppler panner
 */
-SynthDef(\dopPan, { |amp=0.0, gestureNum=0, gestureLen=1, depth=0.3, panShape=0.1, direction=1, tail=3|
+SynthDef(\dopPan, { |amp=0.0,freq=3, gestureLen=1, depth=0.3, panShape=0.1, direction=1, tail=3|
 	//_*argument desecriptions*_\\
 	//============================\\
-	//_gestureNum_ indicates the shape of the pan
 	//_gestureLen_ determines length of the pan gesture
-	//_depth_ represents the max freq change from the doppler effec
+	//_depth_ represents the max freq change from the doppler effect
 	/*_panShape_ determines balance between "approach" panning (pitchshift up) and "depart" panning (pitchshift down);
 	_panShape_ range: 0.0 < range > 1.0; closer to 0 is a quicker approach, and vice versa
 	*/
@@ -150,8 +150,8 @@ SynthDef(\dopPan, { |amp=0.0, gestureNum=0, gestureLen=1, depth=0.3, panShape=0.
 	//tail determines the length of the fade out/assoc. pitchshift downwards...
 	var sound,trig,freqShift,audioEnv,dopEnv,pan,panDelta, mix,mix2,bands;
 	//---
-	sound = In.ar(50, 2).sum;//choose input freq range (0-4)
-	trig=Pulse.kr(Array.fill(10,{1.0.rand}),0.4).sum;
+	sound = In.ar(50, 2).sum;//
+	trig=Pulse.kr(freq,0.4);
 	//---
 	pan=EnvGen.kr(Env.new([1.0,0.0,-1.0],[gestureLen*panShape,gestureLen*(1-panShape)],curve:\sine),trig);
 	panDelta=EnvGen.kr(Env.new([1,1.0+depth,1-(depth*1.5)],[gestureLen*panShape,gestureLen*(1-panShape)],[3,1]),trig);
@@ -600,6 +600,76 @@ for(0, ~processors.size-1,{ |i|
 		~sliderSet[i + 6][1][0].value_((obj.value * 1000).round / 1000);
 	};
 });
+/*// /**
+// * Link Parameters
+// */
+~sliderSet[1][0][1].action = { |obj|
+	var synth = ~droplet;
+	NodeControl(synth, 3).value = obj.value;
+	~sliderSet[1][1][1].value_((obj.value * 1000).round / 1000);
+};
+
+~sliderSet[1][0][2].action = { |obj|
+	var synth = ~droplet;
+	NodeControl(synth, 4).value = obj.value;
+	~sliderSet[1][1][2].value_((obj.value * 1000).round / 1000);
+};
+
+~sliderSet[2][0][1].action = { |obj|
+	var synth = ~butter;
+	NodeControl(synth, 3).value = obj.value;
+	~sliderSet[2][1][1].value_((obj.value * 1000).round / 1000);
+};
+
+~sliderSet[2][0][2].action = { |obj|
+	var synth = ~butter;
+	NodeControl(synth, 4).value = obj.value;
+	~sliderSet[2][1][2].value_((obj.value * 1000).round / 1000);
+};
+
+~sliderSet[3][0][1].action = { |obj|
+	var synth = ~phaseMod;
+	NodeControl(synth, 2).value = obj.value;
+	~sliderSet[3][1][1].value_((obj.value * 1000).round / 1000);
+};
+
+//---------------------
+
+~sliderSet[6][0][1].action = { |obj|
+	var synth = ~dopPan;
+	NodeControl(synth, 1).value = obj.value;
+	~sliderSet[6][1][1].value_((obj.value * 1000).round / 1000);
+};
+
+~sliderSet[6][0][2].action = { |obj|
+	var synth = ~dopPan;
+	NodeControl(synth, 4).value = obj.value;
+	~sliderSet[6][1][2].value_((obj.value * 1000).round / 1000);
+};
+
+~sliderSet[6][0][3].action = { |obj|
+	var synth = ~dopPan;
+	NodeControl(synth, 5).value = obj.value;
+	~sliderSet[6][1][3].value_((obj.value * 1000).round / 1000);
+};
+
+~sliderSet[10][0][1].action = { |obj|
+	var synth = ~combFilter;
+	NodeControl(synth, 1).value = obj.value;
+	~sliderSet[6][1][1].value_((obj.value * 1000).round / 1000);
+};
+
+~sliderSet[10][0][2].action = { |obj|
+	var synth = ~combFilter;
+	NodeControl(synth, 2).value = obj.value;
+	~sliderSet[6][1][2].value_((obj.value * 1000).round / 1000);
+};
+
+~sliderSet[10][0][3].action = { |obj|
+	var synth = ~combFilter;
+	NodeControl(synth, 3).value = obj.value;
+	~sliderSet[6][1][3].value_((obj.value * 1000).round / 1000);
+};*/
 
 );
 
