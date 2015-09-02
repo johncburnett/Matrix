@@ -1,35 +1,11 @@
 Server.killAll
 (
 //****************************************************************************//
-//_INIT - do this first or you will be sad
+//_INIT
 
 o = s.options;
 o.memSize = 8192 * 4;
 s.boot;
-MIDIIn.connectAll;
-
-// ~soundBuf = Buffer.read(s, "*_*");
-
-//Pattern percussion stuff
-~bpm = 20; //<--Set this to taste!-->
-//~key=50.midicps;
-~beat = 60/~bpm;
-//a-d are volum
-~vol1 = 0.0;
-~vol2 = 0.0;
-~vol3 = 0.0;
-~vol4 = 0.0;
-~bassFreq  = 1;
-~snareFreq = 1;
-~hatFreq   = 1;
-~pitchLen  = 1;
-//sequence of patterns to draw from
-~duo        = Pseq([~beat/2,~beat/2],1);
-~trio       = Pseq([~beat/3,~beat/3,~beat/3],1);
-~quartet    = Pseq([~beat/4,~beat/4,~beat/4,~beat/4,],1);
-~quarToQuin = Pseq([~beat/4,~beat/4,~beat/4,~beat/8,~beat/8],1);
-~quintet    = Pseq([~beat/5,~beat/5,~beat/5,~beat/5,~beat/5],1);
-~quinToTrio = Pseq([~beat/5,~beat/5,~beat/5,~beat/15,~beat/3],1);
 );
 
 
@@ -66,10 +42,11 @@ SynthDef(\audioInput, { |amp = 0.0, choose = 30|
 *
 * pitch envelope-based synth
 */
-SynthDef(\droplet, { |amp = 0.7, choose = 30, gate = 0, freq = 3000, dur = 1|
-	var sound,volEnv,pitchEnv;
+SynthDef(\droplet, { |amp = 0.7, choose = 30, freq = 3000,trigFreq=1, dur = 1|
+	var sound,volEnv,pitchEnv, gate;
+	gate = Pulse.kr(trigFreq);
 	pitchEnv=EnvGen.ar(Env.new([0.9,0.7,1,1],[0.06,0.05,0.89]*dur,\exponential), gate);
-	volEnv=EnvGen.ar(Env.new([0,1,0.8,0.0],[0.2,0.05,0.75]*dur), doneAction:2);
+	volEnv=EnvGen.ar(Env.new([0,1,0.8,0.0],[0.2,0.05,0.75]*dur),gate);
 	sound=SinOsc.ar(freq*pitchEnv,mul:volEnv);
 	Out.ar(choose, Pan2.ar(sound) * amp);
 }).load(s);
@@ -81,10 +58,11 @@ SynthDef(\droplet, { |amp = 0.7, choose = 30, gate = 0, freq = 3000, dur = 1|
 *
 * ~Sawtooth Synth
 */
-SynthDef(\butter,{ |amp = 0.7, choose = 30, gate = 0, freq = 300, dur = 1|
-	var env, tone;
+SynthDef(\butter,{ |amp = 0.7, choose = 30, trigFreq=1, freq = 300, dur = 1|
+	var env, tone, gate;
+	gate = Pulse.kr(trigFreq);
 	env = Env.new([0, 0.8, 0], [dur/16, dur/16 * 15], \lin);
-	env = EnvGen.ar(env, doneAction:2);
+	env = EnvGen.ar(env,gate);
 	tone = SinOsc.ar( freq * (1,3..10) * 0.95, mul:(1/5) ).sum.dup;
 	tone = Clip.ar(tone, 0, 0.8);
 	tone = HPF.ar(tone, freq*3);
@@ -100,7 +78,7 @@ SynthDef(\butter,{ |amp = 0.7, choose = 30, gate = 0, freq = 300, dur = 1|
 */
 SynthDef(\phaseMod,{ |amp = 0.0, choose = 30, freq = 30|
 	var fund, oscA, oscB, pm;
-	fund = 40.midicps;
+	fund = freq.midicps;
 	oscA = PMOsc.ar(fund, fund / 2.05, 2pi * 0.1);
 	oscB = SinOsc.ar(fund / 2.01, oscA * 2pi * 0.5);
 	pm = SinOsc.ar(fund / 2.02, oscB * 2pi * 0.8);
@@ -333,7 +311,6 @@ SynthDef(\output, { |amp = 0.9|
 	in5 = In.ar(90, 2);
 	//
 
-	// mix = Mix.ar(2, [in0, in1, in2, in3, in4, in5] / 6);
 	mix = (in0 + in1 + in2 + in3 + in4 + in5) / 3;
 	Out.ar(0, mix);
 }).load(s);
@@ -360,7 +337,6 @@ SynthDef(\output, { |amp = 0.9|
 ~butter     = Synth.before(~directOut,\butter);
 ~phaseMod   = Synth.before(~directOut,\phaseMod);
 ~noise      = Synth.before(~directOut,\noise);
-~patternPerc= 0;//
 ~null       = 0;
 
 /*^^^PatternPercussion will implemented at some point, but we do not have the time at this moment.
@@ -370,18 +346,12 @@ SynthDef(\output, { |amp = 0.9|
 ~pitch      = Synth(\pitch);
 ~patPerc    = [~bass, ~snare, ~hat, ~pitch];*/
 
-~generators = [~audioInput, ~droplet, ~butter, ~phaseMod, ~noise,~null];
+~generators = [~audioInput, ~droplet, ~butter, ~phaseMod, ~noise, ~null];
 ~processors = [~dopPan, ~splatDelay, ~octoVerb, ~combShift, ~combFilter, ~directOut];
 
 //****************************************************************************//
 
 );
-
-// ~phaseMod.set(\choose, 52)
-//
-// ~phaseMod.set(\amp, 1)
-// ~s.set(\amp, 1);
-// ~directOut.set(\amp, 1);
 
 
 
@@ -515,31 +485,10 @@ for(0, 3,{ |i|
 
 /**
 * Link matrix routing
-*
-
-HEY JOHN, ITS PAULUS. I HAVE PUT THE ROUTINE IN THE CODE UP ABOVE. THERE IS COMMENTING THERE BUT BASICALLY YOU HAVE TO SEND A MESSAGE TO "~whichSynth" with the number of the synth you want to send the rhythmic gate messages to... Droplet is 2, Butter is 3 and PatternPerc is 6 [BUT remember to correnct for zero-indexing!].
-
-ALSO I NOTICED: NOTHING IS ACTUALLY GOING TO THE EFFECTS YET, RIGHT? THE ENTIRE COLUMN GOES TO DIRECT OUT PUT I THINK...
-
-* Second parameter of generators must be bus number
 */
-~asyncValues = { |synth|
-	var x = (), d = SynthDescLib.global[synth.defName.asSymbol];
-	d.notNil.if { d.controls.do { |c|  synth.get(c.name,  { |y|
-		x.put(c.name, y) }) } };
-	x
-};
-
-~syncValues = { |synth|
-	var x = (), d = SynthDescLib.global[synth.defName.asSymbol];
-	d.notNil.if { d.controls.do { |c| x.put(c.name, c.defaultValue) } };
-	x
-};
-
 for(0, 5,{ |i|
 	for(0, 5,{ |j|
 		var port = (50 + (j*2));
-
 		~matrix[i][j].action = { |obj|
 
 			if( ~matrix[i][j].value == 1, {
@@ -577,14 +526,14 @@ for(0, 5,{ |i|
 	});
 };
 
-~makeOneShot.(1);
-~makeOneShot.(2);
+/*~makeOneShot.(1);
+~makeOneShot.(2);*/
 
 
 /**
 * Link Amplitudes
 */
-for(0, ~generators.size-1,{ |i|
+for(0, ~generators.size-2,{ |i|
 	~sliderSet[i][0][0].action = { |obj|
 		var synth = ~generators[i];
 		NodeControl(synth, 0).value = obj.value;
@@ -595,14 +544,15 @@ for(0, ~generators.size-1,{ |i|
 for(0, ~processors.size-1,{ |i|
 	~sliderSet[i + 6][0][0].action = { |obj|
 		var synth = ~processors[i];
-		synth.defName.postln;
 		NodeControl(synth, 0).value = obj.value;
 		~sliderSet[i + 6][1][0].value_((obj.value * 1000).round / 1000);
 	};
 });
-/*// /**
-// * Link Parameters
-// */
+
+
+/**
+* Link Parameters
+*/
 ~sliderSet[1][0][1].action = { |obj|
 	var synth = ~droplet;
 	NodeControl(synth, 3).value = obj.value;
@@ -630,7 +580,7 @@ for(0, ~processors.size-1,{ |i|
 ~sliderSet[3][0][1].action = { |obj|
 	var synth = ~phaseMod;
 	NodeControl(synth, 2).value = obj.value;
-	~sliderSet[3][1][1].value_((obj.value * 1000).round / 1000);
+	~sliderSet[3][1][1].value_((obj.value * 100000).round / 1000);
 };
 
 //---------------------
@@ -649,7 +599,7 @@ for(0, ~processors.size-1,{ |i|
 
 ~sliderSet[6][0][3].action = { |obj|
 	var synth = ~dopPan;
-	NodeControl(synth, 5).value = obj.value;
+	NodeControl(synth, 2).value = obj.value;
 	~sliderSet[6][1][3].value_((obj.value * 1000).round / 1000);
 };
 
@@ -669,7 +619,7 @@ for(0, ~processors.size-1,{ |i|
 	var synth = ~combFilter;
 	NodeControl(synth, 3).value = obj.value;
 	~sliderSet[6][1][3].value_((obj.value * 1000).round / 1000);
-};*/
+};
 
 );
 
