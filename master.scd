@@ -42,7 +42,7 @@ SynthDef(\audioInput, { |amp = 0.0, choose = 30|
 *
 * pitch envelope-based synth
 */
-SynthDef(\droplet, { |amp = 0.7, choose = 30, freq = 3000,trigFreq=1, dur = 1|
+SynthDef(\droplet, { |amp = 0.7, choose = 30, freq = 3000, trigFreq=1, dur = 1|
 	var sound,volEnv,pitchEnv, gate;
 	gate = Pulse.kr(trigFreq);
 	pitchEnv=EnvGen.ar(Env.new([0.9,0.7,1,1],[0.06,0.05,0.89]*dur,\exponential), gate);
@@ -78,7 +78,7 @@ SynthDef(\butter,{ |amp = 0.7, choose = 30, trigFreq=1, freq = 300, dur = 1|
 */
 SynthDef(\phaseMod,{ |amp = 0.0, choose = 30, freq = 30|
 	var fund, oscA, oscB, pm;
-	fund = freq.midicps;
+	fund = freq;
 	oscA = PMOsc.ar(fund, fund / 2.05, 2pi * 0.1);
 	oscB = SinOsc.ar(fund / 2.01, oscA * 2pi * 0.5);
 	pm = SinOsc.ar(fund / 2.02, oscB * 2pi * 0.8);
@@ -105,6 +105,9 @@ SynthDef(\noise,{ |amp = 0.0, choose = 30|
 *
 * TODO - make synths static, integrate with routines
 */
+SynthDef(\pink,{ |amp = 0.0, choose = 30|
+	Out.ar(choose, PinkNoise.ar(0.8)!2 * amp);
+}).load(s);
 
 
 
@@ -337,7 +340,7 @@ SynthDef(\output, { |amp = 0.9|
 ~butter     = Synth.before(~directOut,\butter);
 ~phaseMod   = Synth.before(~directOut,\phaseMod);
 ~noise      = Synth.before(~directOut,\noise);
-~null       = 0;
+~pink       = Synth.before(~directOut,\pink);
 
 /*^^^PatternPercussion will implemented at some point, but we do not have the time at this moment.
 ~bass       = Synth(\bass);
@@ -346,7 +349,7 @@ SynthDef(\output, { |amp = 0.9|
 ~pitch      = Synth(\pitch);
 ~patPerc    = [~bass, ~snare, ~hat, ~pitch];*/
 
-~generators = [~audioInput, ~droplet, ~butter, ~phaseMod, ~noise, ~null];
+~generators = [~audioInput, ~droplet, ~butter, ~phaseMod, ~noise, ~pink];
 ~processors = [~dopPan, ~splatDelay, ~octoVerb, ~combShift, ~combFilter, ~directOut];
 
 //****************************************************************************//
@@ -465,6 +468,7 @@ w.drawFunc_{
 
 //generate sliders
 ~sliderSet = Array.newClear(12);
+~numSliders = [1,3,3,2,1,1,4,1,1,1,4,1];
 p = 0;
 for(0, 3,{ |i|
 	for(0, 2,{ |j|
@@ -473,12 +477,11 @@ for(0, 3,{ |i|
 			(~height/4),
 			(j*2*~width/9),
 			(i*~height/4),
-			4
+			~numSliders[p]
 		);
 		p = p + 1;
 	});
 });
-
 
 //generate matrices
 ~matrix = ~matrixGen.value(6, 6, 2*~width/3 + 30, 0, ~height/2);
@@ -549,76 +552,106 @@ for(0, ~processors.size-1,{ |i|
 	};
 });
 
+//scale
+~scale = { |x, inputMin, inputMax, outputMin, outputMax|
+	var numer, denom, scaled;
+	numer = (outputMax-outputMin) * (x-inputMin);
+	denom = inputMax - inputMin;
+	scaled = (numer / denom) + outputMin;
+	scaled;
+};
 
 /**
 * Link Parameters
 */
 ~sliderSet[1][0][1].action = { |obj|
-	var synth = ~droplet;
-	NodeControl(synth, 3).value = obj.value;
-	~sliderSet[1][1][1].value_((obj.value * 1000).round / 1000);
+	var synth, value;
+	synth = ~droplet;
+	value = ~scale.(obj.value, 0.0, 1.0, 0.1, 16000);
+	NodeControl(synth, 2).value = value;
+	~sliderSet[1][1][1].value_(value);
 };
 
 ~sliderSet[1][0][2].action = { |obj|
-	var synth = ~droplet;
-	NodeControl(synth, 4).value = obj.value;
-	~sliderSet[1][1][2].value_((obj.value * 1000).round / 1000);
+	var synth, value;
+	synth = ~droplet;
+	value = ~scale.(obj.value, 0.0, 1.0, 0.1, 10);
+	NodeControl(synth, 4).value = value;
+	~sliderSet[1][1][2].value_(value);
 };
 
 ~sliderSet[2][0][1].action = { |obj|
-	var synth = ~butter;
-	NodeControl(synth, 3).value = obj.value;
-	~sliderSet[2][1][1].value_((obj.value * 1000).round / 1000);
+	var synth, value;
+	synth = ~butter;
+	value = ~scale.(obj.value, 0.0, 1.0, 0.1, 1000);
+	NodeControl(synth, 3).value = value;
+	~sliderSet[2][1][1].value_(value);
 };
 
 ~sliderSet[2][0][2].action = { |obj|
-	var synth = ~butter;
-	NodeControl(synth, 4).value = obj.value;
-	~sliderSet[2][1][2].value_((obj.value * 1000).round / 1000);
+	var synth, value;
+	synth = ~butter;
+	value = ~scale.(obj.value, 0.0, 1.0, 0.1, 10);
+	NodeControl(synth, 4).value = value;
+	~sliderSet[2][1][2].value_(value);
 };
 
 ~sliderSet[3][0][1].action = { |obj|
-	var synth = ~phaseMod;
-	NodeControl(synth, 2).value = obj.value;
-	~sliderSet[3][1][1].value_((obj.value * 100000).round / 1000);
+	var synth, value;
+	synth = ~phaseMod;
+	value = ~scale.(obj.value, 0.0, 1.0, 0.1, 1000);
+	NodeControl(synth, 2).value = value;
+	~sliderSet[3][1][1].value_(value);
 };
 
 //---------------------
 
 ~sliderSet[6][0][1].action = { |obj|
-	var synth = ~dopPan;
-	NodeControl(synth, 1).value = obj.value;
-	~sliderSet[6][1][1].value_((obj.value * 1000).round / 1000);
+	var synth, value;
+	synth = ~dopPan;
+	value = ~scale.(obj.value, 0.0, 1.0, 0.5, 20);
+	NodeControl(synth, 1).value = value;
+	~sliderSet[6][1][1].value_(value);
 };
 
 ~sliderSet[6][0][2].action = { |obj|
-	var synth = ~dopPan;
-	NodeControl(synth, 4).value = obj.value;
-	~sliderSet[6][1][2].value_((obj.value * 1000).round / 1000);
+	var synth, value;
+	synth = ~dopPan;
+	value = ~scale.(obj.value, 0.0, 1.0, 0.1, 10);
+	NodeControl(synth, 2).value = value;
+	~sliderSet[6][1][2].value_(value);
 };
 
 ~sliderSet[6][0][3].action = { |obj|
-	var synth = ~dopPan;
-	NodeControl(synth, 2).value = obj.value;
-	~sliderSet[6][1][3].value_((obj.value * 1000).round / 1000);
+	var synth, value;
+	synth = ~dopPan;
+	value = ~scale.(obj.value, 0.0, 1.0, 1.0/20.0, 1.0/0.5);
+	NodeControl(synth, 4).value = value;
+	~sliderSet[6][1][3].value_(value);
 };
 
 ~sliderSet[10][0][1].action = { |obj|
-	var synth = ~combFilter;
-	NodeControl(synth, 1).value = obj.value;
-	~sliderSet[6][1][1].value_((obj.value * 1000).round / 1000);
+	var synth, value;
+	synth = ~combFilter;
+	value = ~scale.(obj.value, 0.0, 1.0, 0.1, 100.0);
+	NodeControl(synth, 1).value = value;
+	~sliderSet[6][1][1].value_(value);
 };
 
 ~sliderSet[10][0][2].action = { |obj|
-	var synth = ~combFilter;
-	NodeControl(synth, 2).value = obj.value;
-	~sliderSet[6][1][2].value_((obj.value * 1000).round / 1000);
+	var synth, value;
+	synth = ~combFilter;
+	value = ~scale.(obj.value, 0.0, 1.0, 0.1, 10.0);
+	NodeControl(synth, 2).value = value;
+	~sliderSet[6][1][2].value_(value);
 };
 
 ~sliderSet[10][0][3].action = { |obj|
-	var synth = ~combFilter;
-	NodeControl(synth, 3).value = obj.value;
-	~sliderSet[6][1][3].value_((obj.value * 1000).round / 1000);
+	var synth, value;
+	synth = ~combFilter;
+	value = ~scale.(obj.value, 0.0, 1.0, 1, 8);
+	NodeControl(synth, 3).value = value;
+	~sliderSet[6][1][3].value_(value);
 };
 
 );
