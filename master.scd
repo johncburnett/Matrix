@@ -81,15 +81,21 @@ s.waitForBoot({
 		//---------------------
 
 		/**
-		* No.6 - patPerc
+		* No.6 - shutff
 		*
-		* Pattern percussion - bass, snare, hat, pitch
-		*
-		* TODO - make synths static, integrate with routines
 		*/
-		SynthDef(\pink,{ |amp = 0.0, choose = 30|
-			Out.ar(choose, PinkNoise.ar(0.8)!2 * amp);
-		}).load(s);
+SynthDef(\nsStatic, {
+	arg amp=0.0, choose=30,mix = 0.9;// mix val 0.0 -> 1.0
+	var sound, sound2, stereo, dummy, dummy2;
+	dummy = MouseX.kr(0.2, 2.01);
+	//dummy2 = 0.01*MouseY.kr(0, 100, 1);
+	dummy2 = mix;
+	sound = Crackle.ar(dummy, 0.5, 0.5);//chaosParam val ~0.95 -> ~2.05
+	sound2 = PitchShift.ar(sound, 0.2, 0.249, 0.02,2);
+	mix = sound*dummy2 + (sound2*(1.0+(-1*dummy2)));
+	stereo = Limiter.ar(Pan2.ar(mix), 0.5);
+	Out.ar(choose,stereo*amp);
+}).add;
 
 
 
@@ -322,7 +328,7 @@ s.waitForBoot({
 		~butter     = Synth.before(~directOut,\butter);
 		~phaseMod   = Synth.before(~directOut,\phaseMod);
 		~noise      = Synth.before(~directOut,\noise);
-		~pink       = Synth.before(~directOut,\pink);
+		~nsStatic     = Synth.before(~directOut,\nsStatic);
 
 		/*^^^PatternPercussion will implemented at some point, but we do not have the time at this moment.
 		~bass       = Synth(\bass);
