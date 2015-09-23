@@ -72,30 +72,29 @@ s.waitForBoot({
 		/**
 		* No.5 - noise
 		*
-		* to be implemented
 		*/
 		SynthDef(\noise,{ |amp = 0.0, choose = 30|
-			Out.ar(choose, WhiteNoise.ar(0.8)!2 * amp);
+			var noise = HenonN.ar(SampleRate.ir/4, MouseX.kr(1,1.4), MouseY.kr(0,0.3)) * 0.2;
+			Out.ar(choose, noise!2 * amp);
 		}).load(s);
 
 		//---------------------
 
 		/**
-		* No.6 - shutff
+		* No.6 - nsSTatic
 		*
 		*/
-SynthDef(\nsStatic, {
-	arg amp=0.0, choose=30,mix = 0.9;// mix val 0.0 -> 1.0
-	var sound, sound2, stereo, dummy, dummy2;
-	dummy = MouseX.kr(0.2, 2.01);
-	//dummy2 = 0.01*MouseY.kr(0, 100, 1);
-	dummy2 = mix;
-	sound = Crackle.ar(dummy, 0.5, 0.5);//chaosParam val ~0.95 -> ~2.05
-	sound2 = PitchShift.ar(sound, 0.2, 0.249, 0.02,2);
-	mix = sound*dummy2 + (sound2*(1.0+(-1*dummy2)));
-	stereo = Limiter.ar(Pan2.ar(mix), 0.5);
-	Out.ar(choose,stereo*amp);
-}).add;
+		SynthDef(\nsStatic, { |amp=0.0, choose=30,mix = 0.9|
+			var sound, sound2, stereo, dummy, dummy2;
+			dummy = MouseX.kr(0.2, 2.01);
+			//dummy2 = 0.01*MouseY.kr(0, 100, 1);
+			dummy2 = mix;
+			sound = Crackle.ar(dummy, 0.5, 0.5);//chaosParam val ~0.95 -> ~2.05
+			sound2 = PitchShift.ar(sound, 0.2, 0.249, 0.02,2);
+			mix = sound*dummy2 + (sound2*(1.0+(-1*dummy2)));
+			stereo = Limiter.ar(Pan2.ar(mix), 0.5);
+			Out.ar(choose,stereo*amp);
+		}).load(s);
 
 
 
@@ -313,7 +312,6 @@ SynthDef(\nsStatic, {
 		//output
 		~output=Synth.tail(1,\output);
 
-
 		//processors
 		~directOut  = Synth.before(~output,\directOut);
 		~dopPan     = Synth.before(~output,\dopPan);
@@ -330,14 +328,7 @@ SynthDef(\nsStatic, {
 		~noise      = Synth.before(~directOut,\noise);
 		~nsStatic     = Synth.before(~directOut,\nsStatic);
 
-		/*^^^PatternPercussion will implemented at some point, but we do not have the time at this moment.
-		~bass       = Synth(\bass);
-		~snare      = Synth(\snare);
-		~hat        = Synth(\hat);
-		~pitch      = Synth(\pitch);
-		~patPerc    = [~bass, ~snare, ~hat, ~pitch];*/
-
-		~generators = [~audioInput, ~droplet, ~butter, ~phaseMod, ~noise, ~pink];
+		~generators = [~audioInput, ~droplet, ~butter, ~phaseMod, ~noise, ~nsStatic];
 		~processors = [~dopPan, ~splatDelay, ~octoVerb, ~combShift, ~combFilter, ~directOut];
 
 		//****************************************************************************//
@@ -456,7 +447,7 @@ SynthDef(\nsStatic, {
 
 		//generate sliders
 		~sliderSet = Array.newClear(12);
-		~numSliders = [1,4,4,2,1,1,4,1,1,1,4,1];
+		~numSliders = [1,4,4,2,1,2,4,1,1,1,4,1];
 		p = 0;
 		for(0, 3,{ |i|
 			for(0, 2,{ |j|
@@ -527,7 +518,7 @@ SynthDef(\nsStatic, {
 		/**
 		* Link Amplitudes
 		*/
-		for(0, ~generators.size-2,{ |i|
+		for(0, ~generators.size-1,{ |i|
 			~sliderSet[i][0][0].action = { |obj|
 				var synth = ~generators[i];
 				NodeControl(synth, 0).value = obj.value;
@@ -615,9 +606,18 @@ SynthDef(\nsStatic, {
 		~sliderSet[3][0][1].action = { |obj|
 			var synth, value;
 			synth = ~phaseMod;
-			value = ~scale.(obj.value, 0.0, 1.0, 0.1, 1000);
+			value = ~scale.(obj.value, 0.0, 1.0, 0.1, 500.0);
 			NodeControl(synth, 2).value = value;
 			~sliderSet[3][1][1].value_(value);
+		};
+
+
+		~sliderSet[5][0][1].action = { |obj|
+			var synth, value;
+			synth = ~nsStatic;
+			value = ~scale.(obj.value, 0.0, 1.0, 0.0, 1.0);
+			NodeControl(synth, 2).value = value;
+			~sliderSet[5][1][1].value_(value);
 		};
 
 
