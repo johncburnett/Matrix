@@ -24,7 +24,7 @@ s.waitForBoot({
 		*
 		* pitch envelope-based synth
 		*/
-		SynthDef(\droplet, { |amp = 0.7, choose = 30, freq = 3000, dur = 1, rate=1|
+		SynthDef(\droplet, { |amp = 0.0, choose = 30, freq = 3000, dur = 1, rate=1|
 			var sound,volEnv,pitchEnv, gate;
 			gate = Pulse.kr(rate);
 			pitchEnv=EnvGen.ar(Env.new([0.9,0.7,1,1],[0.06,0.05,0.89]*dur,\exponential), gate);
@@ -40,7 +40,7 @@ s.waitForBoot({
 		*
 		* ~Sawtooth Synth
 		*/
-		SynthDef(\butter,{ |amp = 0.7, choose = 30, freq = 300, dur = 1,rate|
+		SynthDef(\butter,{ |amp = 0.0, choose = 30, freq = 300, dur = 1, rate=1|
 			var env, tone, gate;
 			gate = Pulse.kr(rate);
 			env = Env.new([0, 0.8, 0], [dur/16, dur/16 * 15], \lin);
@@ -450,7 +450,7 @@ s.waitForBoot({
 
 		//generate sliders
 		~sliderSet = Array.newClear(12);
-		~numSliders = [1,3,3,2,1,1,4,1,1,1,4,1];
+		~numSliders = [1,4,4,2,1,1,4,1,1,1,4,1];
 		p = 0;
 		for(0, 3,{ |i|
 			for(0, 2,{ |j|
@@ -565,8 +565,17 @@ s.waitForBoot({
 			var synth, value;
 			synth = ~droplet;
 			value = ~scale.(obj.value, 0.0, 1.0, 0.1, 10);
-			NodeControl(synth, 4).value = value;
+			NodeControl(synth, 3).value = value;
 			~sliderSet[1][1][2].value_(value);
+		};
+
+
+		~sliderSet[1][0][3].action = { |obj|
+			var synth, value;
+			synth = ~droplet;
+			value = ~scale.(obj.value, 0.0, 1.0, 0.1, 10);
+			NodeControl(synth, 4).value = value;
+			~sliderSet[1][1][3].value_(value);
 		};
 
 
@@ -574,7 +583,7 @@ s.waitForBoot({
 			var synth, value;
 			synth = ~butter;
 			value = ~scale.(obj.value, 0.0, 1.0, 0.1, 1000);
-			NodeControl(synth, 3).value = value;
+			NodeControl(synth, 2).value = value;
 			~sliderSet[2][1][1].value_(value);
 		};
 
@@ -583,8 +592,17 @@ s.waitForBoot({
 			var synth, value;
 			synth = ~butter;
 			value = ~scale.(obj.value, 0.0, 1.0, 0.1, 10);
-			NodeControl(synth, 4).value = value;
+			NodeControl(synth, 3).value = value;
 			~sliderSet[2][1][2].value_(value);
+		};
+
+
+		~sliderSet[2][0][3].action = { |obj|
+			var synth, value;
+			synth = ~butter;
+			value = ~scale.(obj.value, 0.0, 1.0, 0.1, 10);
+			NodeControl(synth, 4).value = value;
+			~sliderSet[2][1][3].value_(value);
 		};
 
 
