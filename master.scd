@@ -24,9 +24,9 @@ s.waitForBoot({
 		*
 		* pitch envelope-based synth
 		*/
-		SynthDef(\droplet, { |amp = 0.7, choose = 30, freq = 3000, trigFreq=1, dur = 1|
+		SynthDef(\droplet, { |amp = 0.7, choose = 30, freq = 3000, dur = 1, rate=1|
 			var sound,volEnv,pitchEnv, gate;
-			gate = Pulse.kr(trigFreq);
+			gate = Pulse.kr(rate);
 			pitchEnv=EnvGen.ar(Env.new([0.9,0.7,1,1],[0.06,0.05,0.89]*dur,\exponential), gate);
 			volEnv=EnvGen.ar(Env.new([0,1,0.8,0.0],[0.2,0.05,0.75]*dur),gate);
 			sound=SinOsc.ar(freq*pitchEnv,mul:volEnv);
@@ -40,9 +40,9 @@ s.waitForBoot({
 		*
 		* ~Sawtooth Synth
 		*/
-		SynthDef(\butter,{ |amp = 0.7, choose = 30, trigFreq=1, freq = 300, dur = 1|
+		SynthDef(\butter,{ |amp = 0.7, choose = 30, freq = 300, dur = 1,rate|
 			var env, tone, gate;
-			gate = Pulse.kr(trigFreq);
+			gate = Pulse.kr(rate);
 			env = Env.new([0, 0.8, 0], [dur/16, dur/16 * 15], \lin);
 			env = EnvGen.ar(env,gate);
 			tone = SinOsc.ar( freq * (1,3..10) * 0.95, mul:(1/5) ).sum.dup;
